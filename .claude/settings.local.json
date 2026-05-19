@@ -4,7 +4,11 @@
       "Bash(rtk ls *)",
       "Bash(rtk *)",
       "Bash(git init *)",
-      "Bash(git config *)"
+      "Bash(git config *)",
+      "Bash(rm -f backend/app/routers/projects.py backend/tests/test_projects.py backend/tests/test_pagination_sorting.py)",
+      "Bash(rtk find *)",
+      "Bash(PYTHONPATH=. rtk pytest -q backend/tests/)",
+      "Bash(PYTHONPATH=. rtk pytest backend/tests/ -v)"
     ]
   }
 }

@@ -1,26 +1,7 @@
 async function fetchJSON(url, options) {
   const res = await fetch(url, options);
   if (!res.ok) throw new Error(await res.text());
-  if (res.status === 204) return null;
   return res.json();
-}
-
-async function loadProjects() {
-  const list = document.getElementById('projects');
-  list.innerHTML = '';
-  const projects = await fetchJSON('/projects/');
-  for (const p of projects) {
-    const li = document.createElement('li');
-    li.textContent = `${p.name} — ${p.description || '(no description)'} `;
-    const btn = document.createElement('button');
-    btn.textContent = 'Delete';
-    btn.onclick = async () => {
-      await fetchJSON(`/projects/${p.id}`, { method: 'DELETE' });
-      loadProjects();
-    };
-    li.appendChild(btn);
-    list.appendChild(li);
-  }
 }
 
 async function loadNotes(params = {}) {
@@ -31,7 +12,6 @@ async function loadNotes(params = {}) {
   for (const n of notes) {
     const li = document.createElement('li');
     li.textContent = `${n.title}: ${n.content} `;
-    if (n.project_id) li.textContent += `[project #${n.project_id}] `;
     const btn = document.createElement('button');
     btn.textContent = 'Delete';
     btn.onclick = async () => {
@@ -51,7 +31,6 @@ async function loadActions(params = {}) {
   for (const a of items) {
     const li = document.createElement('li');
     li.textContent = `${a.description} [${a.completed ? 'done' : 'open'}]`;
-    if (a.project_id) li.textContent += ` [project #${a.project_id}]`;
     if (!a.completed) {
       const btn = document.createElement('button');
       btn.textContent = 'Complete';
@@ -85,19 +64,6 @@ async function loadActions(params = {}) {
 }
 
 window.addEventListener('DOMContentLoaded', () => {
-  document.getElementById('project-form').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const name = document.getElementById('project-name').value;
-    const description = document.getElementById('project-desc').value;
-    await fetchJSON('/projects/', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, description }),
-    });
-    e.target.reset();
-    loadProjects();
-  });
-
   document.getElementById('note-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     const title = document.getElementById('note-title').value;
@@ -133,7 +99,8 @@ window.addEventListener('DOMContentLoaded', () => {
     loadActions({ completed: checked });
   });
 
-  loadProjects();
   loadNotes();
   loadActions();
 });
+
+
