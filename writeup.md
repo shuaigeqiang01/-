@@ -20,7 +20,7 @@ This assignment took me about **TODO** hours to do.
 a. Links to relevant commits/issues
 > Branch: `task-1-add-endpoints-and-validations`
 > Commit: `dab8e2a` — Add DELETE endpoints, GET single action item, and input validation
-> PR: **TODO** — create via https://github.com/shuaigeqiang01/-/compare/master...task-1-add-endpoints-and-validations
+> PR: https://github.com/shuaigeqiang01/-/pull/5
 
 b. PR Description
 > **Problem**: The API was missing DELETE endpoints for notes and action items, a GET single action item endpoint, and input validation allowed empty strings.
@@ -45,7 +45,7 @@ c. Graphite Diamond generated code review
 a. Links to relevant commits/issues
 > Branch: `task-2-extend-extraction-logic`
 > Commit: `967d020` — Enhance action item extraction with structured output and more patterns
-> PR: **TODO** — create via https://github.com/shuaigeqiang01/-/compare/master...task-2-extend-extraction-logic
+> PR: https://github.com/shuaigeqiang01/-/pull/6
 
 b. PR Description
 > **Problem**: The extraction service only recognized `TODO:` and `ACTION:` prefixes, returned plain strings, had no priority/category metadata, and was not exposed via an API endpoint.
@@ -70,7 +70,7 @@ c. Graphite Diamond generated code review
 a. Links to relevant commits/issues
 > Branch: `task-3-add-model-and-relationships`
 > Commit: `0cd1b59` — Add Project model with one-to-many relationships to Notes and ActionItems
-> PR: **TODO** — create via https://github.com/shuaigeqiang01/-/compare/master...task-3-add-model-and-relationships
+> PR: https://github.com/shuaigeqiang01/-/pull/7
 
 b. PR Description
 > **Problem**: Notes and ActionItems existed in isolation with no grouping or organizational structure. No way to scope related items together.
@@ -95,7 +95,7 @@ c. Graphite Diamond generated code review
 a. Links to relevant commits/issues
 > Branch: `task-4-improve-pagination-sorting-tests`
 > Commit: `8d693d9` — Add comprehensive pagination and sorting tests across all endpoints
-> PR: **TODO** — create via https://github.com/shuaigeqiang01/-/compare/master...task-4-improve-pagination-sorting-tests
+> PR: https://github.com/shuaigeqiang01/-/pull/8
 
 b. PR Description
 > **Problem**: Pagination and sorting had minimal test coverage — basic skip/limit params were tested incidentally in CRUD tests but edge cases (zero limit, negative skip, invalid sort fields, boundary values, nested route pagination) were entirely untested. Moreover, skip/limit params lacked `ge=0` validation, silently accepting negative values.
