@@ -9,11 +9,11 @@ Fill out all of the `TODO`s in this file.
 
 ## Submission Details
 
-Name: **TODO** \
-SUNet ID: **TODO** \
-Citations: **TODO**
+Name: **李凯强** \
+SUNet ID: **likq** \
+Citations: **None**
 
-This assignment took me about **TODO** hours to do.
+This assignment took me about **5** hours to do.
 
 
 ## Task 1: Add more endpoints and validations
@@ -82,7 +82,38 @@ b. PR Description
 > **Tradeoffs/Limitations**: FK is nullable for backward compatibility with existing seed data. Nested routes support pagination but not sorting (consistent with how they're scoped to a single project). Frontend shows `[project #N]` label on associated items but doesn't provide a dropdown to select project when creating items — minor UX gap.
 
 c. Graphite Diamond generated code review
-> **TODO** — Create PR on Graphite, run Diamond review, paste results here
+
+Only show comments triggered bycustom rules
+￼
+Graphite · 40m ago
+Logic bug
+￼
+20
++    
+name = Column(String(200), nullable=False)
+21
++    
+description = Column(Text, default="")
+22
++
+23
++    
+notes = relationship("Note", back_populates="project", cascade="all, delete-orphan")
+24
++    
+action_items = relationship("ActionItem", back_populates="project", cascade="all, delete-orphan")
+Using cascade="all, delete-orphan" with nullable foreign keys is dangerous. When a user sets project_id=None on a Note or ActionItem (to unlink it from a project), SQLAlchemy will DELETE the record entirely instead of just clearing the foreign key. This will cause unintended data loss.
+# Change to:
+notes = relationship("Note", back_populates="project", cascade="all, delete"
+)
+action_items = relationship("ActionItem", back_populates="project", cascade="all, delete")
+The delete-orphan should only be used when the relationship is required (non-nullable FK) and children cannot exist independently.
+    notes = relationship("Note", back_populates="project", cascade="all, delete"
+)
+    action_items = relationship("ActionItem", back_populates="project", cascade="all, delete"
+)
+Spotted by Graphite
+View comment in - #7
 
 **Manual review notes**:
 - Cascade delete is correctly configured with `delete-orphan` — verified in tests
