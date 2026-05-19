@@ -1,65 +1,45 @@
 import re
+from dataclasses import dataclass
 
-CATEGORY_PREFIXES = {
-    "todo": re.compile(r"^TODO[:]", re.IGNORECASE),
-    "action": re.compile(r"^ACTION[:]", re.IGNORECASE),
-    "fixme": re.compile(r"^FIXME[:]", re.IGNORECASE),
-    "hack": re.compile(r"^HACK[:]", re.IGNORECASE),
-    "bug": re.compile(r"^BUG[:]", re.IGNORECASE),
-    "note": re.compile(r"^NOTE[:]", re.IGNORECASE),
-    "important": re.compile(r"^IMPORTANT[:]", re.IGNORECASE),
+_PREFIX_PATTERN = re.compile(
+    r"^(todo|action|fixme|hack|bug)(\(.*?\))?:\s*", re.IGNORECASE
+)
+
+_CATEGORY_PRIORITY = {
+    "fixme": 3,
+    "bug": 3,
+    "hack": 2,
+    "urgent": 1,
+    "todo": 1,
+    "action": 1,
 }
 
-HIGH_PRIORITY_MARKERS = ["URGENT", "CRITICAL", "!!", "P0"]
 
-CHECKBOX_PATTERN = re.compile(r"^\s*[-*+]\s*\[\s*[ xX]?\s*\]")
+@dataclass
+class ExtractedItem:
+    content: str
+    category: str
+    priority: int
 
 
-def extract_action_items(text: str) -> list[dict[str, str]]:
-    results: list[dict[str, str]] = []
+def extract_action_items(text: str) -> list[ExtractedItem]:
+    lines = [line.strip("- ") for line in text.splitlines() if line.strip()]
+    results: list[ExtractedItem] = []
 
-    for raw_line in text.splitlines():
-        line = raw_line.strip()
-        if not line:
-            continue
-
-        entry = _classify_line(line)
-        if entry:
-            results.append(entry)
-            continue
-
-        stripped = re.sub(r"^[-*+]\s+", "", line)
-        if stripped != line:
-            entry = _classify_line(stripped)
-            if entry:
-                results.append(entry)
+    for line in lines:
+        m = _PREFIX_PATTERN.match(line)
+        if m:
+            category = m.group(1).lower()
+            content = line[m.end() :].strip()
+            priority = _CATEGORY_PRIORITY.get(category, 1)
+            results.append(
+                ExtractedItem(content=content, category=category, priority=priority)
+            )
+        elif line.endswith("!"):
+            excl_count = len(line) - len(line.rstrip("!"))
+            priority = 3 if excl_count >= 3 else 2 if excl_count >= 2 else 1
+            results.append(
+                ExtractedItem(content=line, category="urgent", priority=priority)
+            )
 
     return results
-
-
-def _classify_line(line: str) -> dict[str, str] | None:
-    category = None
-
-    for cat, regex in CATEGORY_PREFIXES.items():
-        if regex.match(line):
-            category = cat
-            break
-
-    if category is None and CHECKBOX_PATTERN.match(line):
-        category = "checkbox"
-
-    if category is None and line.endswith("!"):
-        category = "action"
-
-    if category is None:
-        return None
-
-    display_text = line
-    if category != "checkbox":
-        display_text = re.sub(r"^[-*+]\s+", "", line)
-
-    priority = "normal"
-    if line.endswith("!") or any(marker in line.upper() for marker in HIGH_PRIORITY_MARKERS):
-        priority = "high"
-
-    return {"text": display_text, "category": category, "priority": priority}
