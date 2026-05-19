@@ -16,8 +16,8 @@ def list_notes(
     db: Session = Depends(get_db),
     q: Optional[str] = None,
     project_id: Optional[int] = None,
-    skip: int = 0,
-    limit: int = Query(50, le=200),
+    skip: int = Query(0, ge=0),
+    limit: int = Query(50, ge=0, le=200),
     sort: str = Query("-created_at", description="Sort by field, prefix with - for desc"),
 ) -> list[NoteRead]:
     stmt = select(Note)

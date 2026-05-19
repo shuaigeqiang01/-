@@ -16,8 +16,8 @@ def list_items(
     db: Session = Depends(get_db),
     completed: Optional[bool] = None,
     project_id: Optional[int] = None,
-    skip: int = 0,
-    limit: int = Query(50, le=200),
+    skip: int = Query(0, ge=0),
+    limit: int = Query(50, ge=0, le=200),
     sort: str = Query("-created_at"),
 ) -> list[ActionItemRead]:
     stmt = select(ActionItem)

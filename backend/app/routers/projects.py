@@ -18,8 +18,8 @@ router = APIRouter(prefix="/projects", tags=["projects"])
 @router.get("/", response_model=list[ProjectRead])
 def list_projects(
     db: Session = Depends(get_db),
-    skip: int = 0,
-    limit: int = Query(50, le=200),
+    skip: int = Query(0, ge=0),
+    limit: int = Query(50, ge=0, le=200),
     sort: str = Query("-created_at"),
 ) -> list[ProjectRead]:
     sort_field = sort.lstrip("-")
@@ -77,8 +77,8 @@ def delete_project(project_id: int, db: Session = Depends(get_db)) -> None:
 def list_project_notes(
     project_id: int,
     db: Session = Depends(get_db),
-    skip: int = 0,
-    limit: int = Query(50, le=200),
+    skip: int = Query(0, ge=0),
+    limit: int = Query(50, ge=0, le=200),
 ) -> list[NoteRead]:
     project = db.get(Project, project_id)
     if not project:
@@ -93,8 +93,8 @@ def list_project_action_items(
     project_id: int,
     db: Session = Depends(get_db),
     completed: bool | None = None,
-    skip: int = 0,
-    limit: int = Query(50, le=200),
+    skip: int = Query(0, ge=0),
+    limit: int = Query(50, ge=0, le=200),
 ) -> list[ActionItemRead]:
     project = db.get(Project, project_id)
     if not project:
