@@ -11,7 +11,14 @@ async function loadNotes(params = {}) {
   const notes = await fetchJSON('/notes/?' + query.toString());
   for (const n of notes) {
     const li = document.createElement('li');
-    li.textContent = `${n.title}: ${n.content}`;
+    li.textContent = `${n.title}: ${n.content} `;
+    const btn = document.createElement('button');
+    btn.textContent = 'Delete';
+    btn.onclick = async () => {
+      await fetchJSON(`/notes/${n.id}`, { method: 'DELETE' });
+      loadNotes(params);
+    };
+    li.appendChild(btn);
     list.appendChild(li);
   }
 }
@@ -45,6 +52,13 @@ async function loadActions(params = {}) {
       };
       li.appendChild(btn);
     }
+    const delBtn = document.createElement('button');
+    delBtn.textContent = 'Delete';
+    delBtn.onclick = async () => {
+      await fetchJSON(`/action-items/${a.id}`, { method: 'DELETE' });
+      loadActions(params);
+    };
+    li.appendChild(delBtn);
     list.appendChild(li);
   }
 }
