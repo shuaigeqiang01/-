@@ -57,3 +57,43 @@ def test_get_nonexistent_action_item(client):
     assert r.status_code == 404
 
 
+def test_create_action_item_with_note_id(client):
+    r = client.post("/notes/", json={"title": "N", "content": "c"})
+    assert r.status_code == 201
+    note_id = r.json()["id"]
+
+    r = client.post("/action-items/", json={"description": "From note", "note_id": note_id})
+    assert r.status_code == 201, r.text
+    data = r.json()
+    assert data["note_id"] == note_id
+
+    r = client.get("/action-items/", params={"note_id": note_id})
+    assert r.status_code == 200
+    items = r.json()
+    assert len(items) == 1
+    assert items[0]["note_id"] == note_id
+
+
+def test_create_action_item_with_invalid_note_id(client):
+    r = client.post("/action-items/", json={"description": "Bad", "note_id": 9999})
+    assert r.status_code == 404
+
+
+def test_patch_action_item_note_id(client):
+    r = client.post("/notes/", json={"title": "N1", "content": "c"})
+    assert r.status_code == 201
+    note1 = r.json()["id"]
+
+    r = client.post("/notes/", json={"title": "N2", "content": "c"})
+    assert r.status_code == 201
+    note2 = r.json()["id"]
+
+    r = client.post("/action-items/", json={"description": "Movable", "note_id": note1})
+    assert r.status_code == 201
+    item_id = r.json()["id"]
+
+    r = client.patch(f"/action-items/{item_id}", json={"note_id": note2})
+    assert r.status_code == 200
+    assert r.json()["note_id"] == note2
+
+
