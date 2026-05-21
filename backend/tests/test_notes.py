@@ -51,3 +51,108 @@ def test_get_nonexistent_note(client):
     assert r.status_code == 404
 
 
+def test_note_title_max_length(client):
+    r = client.post("/notes/", json={"title": "x" * 201, "content": "ok"})
+    assert r.status_code == 422
+
+
+def test_extract_endpoint(client):
+    r = client.post("/notes/extract", json={"text": "TODO: fix bug\nNothing here\nShip it!"})
+    assert r.status_code == 200, r.text
+    items = r.json()
+    assert len(items) == 2
+    categories = {i["category"] for i in items}
+    assert categories == {"todo", "urgent"}
+
+    r = client.post("/notes/extract", json={"text": ""})
+    assert r.status_code == 422
+
+
+def test_create_note_with_tags(client):
+    r = client.post("/tags/", json={"name": "urgent"})
+    assert r.status_code == 201
+    tag_id = r.json()["id"]
+
+    r = client.post("/notes/", json={"title": "Tagged", "content": "note", "tag_ids": [tag_id]})
+    assert r.status_code == 201, r.text
+    data = r.json()
+    assert len(data["tags"]) == 1
+    assert data["tags"][0]["id"] == tag_id
+    assert data["tags"][0]["name"] == "urgent"
+
+
+def test_patch_note_tags(client):
+    r = client.post("/tags/", json={"name": "v1"})
+    assert r.status_code == 201
+    tag1 = r.json()["id"]
+
+    r = client.post("/tags/", json={"name": "v2"})
+    assert r.status_code == 201
+    tag2 = r.json()["id"]
+
+    r = client.post("/notes/", json={"title": "T", "content": "c", "tag_ids": [tag1]})
+    assert r.status_code == 201
+    note_id = r.json()["id"]
+    assert len(r.json()["tags"]) == 1
+
+    r = client.patch(f"/notes/{note_id}", json={"tag_ids": [tag1, tag2]})
+    assert r.status_code == 200
+    assert len(r.json()["tags"]) == 2
+
+    r = client.patch(f"/notes/{note_id}", json={"tag_ids": []})
+    assert r.status_code == 200
+    assert len(r.json()["tags"]) == 0
+
+
+def test_create_note_with_invalid_tag(client):
+    r = client.post("/notes/", json={"title": "T", "content": "c", "tag_ids": [9999]})
+    assert r.status_code == 404
+
+
+def test_notes_pagination(client):
+    for i in range(5):
+        client.post("/notes/", json={"title": f"Note {i}", "content": f"Body {i}"})
+
+    r = client.get("/notes/", params={"skip": 0, "limit": 2, "sort": "title"})
+    assert r.status_code == 200
+    page1 = r.json()
+    assert len(page1) == 2
+
+    r = client.get("/notes/", params={"skip": 2, "limit": 2, "sort": "title"})
+    page2 = r.json()
+    assert len(page2) == 2
+    # Pages should not overlap
+    ids_page1 = {item["id"] for item in page1}
+    ids_page2 = {item["id"] for item in page2}
+    assert ids_page1.isdisjoint(ids_page2)
+
+    r = client.get("/notes/", params={"skip": 4, "limit": 2, "sort": "title"})
+    page3 = r.json()
+    assert len(page3) == 1
+
+    r = client.get("/notes/", params={"skip": 10, "limit": 2})
+    assert r.status_code == 200
+    assert r.json() == []
+
+
+def test_notes_sorting(client):
+    client.post("/notes/", json={"title": "B", "content": "b"})
+    client.post("/notes/", json={"title": "A", "content": "a"})
+    client.post("/notes/", json={"title": "C", "content": "c"})
+
+    r = client.get("/notes/", params={"sort": "title"})
+    titles = [item["title"] for item in r.json()]
+    assert titles == ["A", "B", "C"]
+
+    r = client.get("/notes/", params={"sort": "-title"})
+    titles = [item["title"] for item in r.json()]
+    assert titles == ["C", "B", "A"]
+
+
+def test_notes_sort_invalid_field(client):
+    client.post("/notes/", json={"title": "T", "content": "c"})
+    r = client.get("/notes/", params={"sort": "nonexistent"})
+    assert r.status_code == 200
+    assert len(r.json()) >= 1
+
+

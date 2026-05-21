@@ -3,18 +3,15 @@ from datetime import datetime
 from pydantic import BaseModel, Field
 
 
-# ── Project ──────────────────────────────────────────────────────────────────
+# --- Tag ---
+
+class TagCreate(BaseModel):
+    name: str = Field(..., min_length=1, max_length=50)
 
 
-class ProjectCreate(BaseModel):
-    name: str = Field(..., min_length=1, max_length=200)
-    description: str = ""
-
-
-class ProjectRead(BaseModel):
+class TagRead(BaseModel):
     id: int
     name: str
-    description: str
     created_at: datetime
     updated_at: datetime
 
@@ -22,27 +19,25 @@ class ProjectRead(BaseModel):
         from_attributes = True
 
 
-class ProjectPatch(BaseModel):
-    name: str | None = Field(None, min_length=1, max_length=200)
-    description: str | None = None
+class TagPatch(BaseModel):
+    name: str | None = Field(None, min_length=1, max_length=50)
 
 
-# ── Note ─────────────────────────────────────────────────────────────────────
-
+# --- Note ---
 
 class NoteCreate(BaseModel):
     title: str = Field(..., min_length=1, max_length=200)
     content: str = Field(..., min_length=1)
-    project_id: int | None = None
+    tag_ids: list[int] | None = None
 
 
 class NoteRead(BaseModel):
     id: int
     title: str
     content: str
-    project_id: int | None = None
     created_at: datetime
     updated_at: datetime
+    tags: list[TagRead] = []
 
     class Config:
         from_attributes = True
@@ -51,22 +46,21 @@ class NoteRead(BaseModel):
 class NotePatch(BaseModel):
     title: str | None = Field(None, min_length=1, max_length=200)
     content: str | None = Field(None, min_length=1)
-    project_id: int | None = None
+    tag_ids: list[int] | None = None
 
 
-# ── ActionItem ───────────────────────────────────────────────────────────────
-
+# --- ActionItem ---
 
 class ActionItemCreate(BaseModel):
     description: str = Field(..., min_length=1)
-    project_id: int | None = None
+    note_id: int | None = None
 
 
 class ActionItemRead(BaseModel):
     id: int
     description: str
     completed: bool
-    project_id: int | None = None
+    note_id: int | None = None
     created_at: datetime
     updated_at: datetime
 
@@ -77,4 +71,19 @@ class ActionItemRead(BaseModel):
 class ActionItemPatch(BaseModel):
     description: str | None = Field(None, min_length=1)
     completed: bool | None = None
-    project_id: int | None = None
+    note_id: int | None = None
+
+
+# --- Extract ---
+
+class ExtractRequest(BaseModel):
+    text: str = Field(..., min_length=1)
+
+
+class ExtractedItemRead(BaseModel):
+    content: str
+    category: str
+    priority: int
+
+    class Config:
+        from_attributes = True
