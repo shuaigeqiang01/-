@@ -15,7 +15,6 @@ router = APIRouter(prefix="/action-items", tags=["action_items"])
 def list_items(
     db: Session = Depends(get_db),
     completed: Optional[bool] = None,
-    project_id: Optional[int] = None,
     skip: int = 0,
     limit: int = Query(50, le=200),
     sort: str = Query("-created_at"),
@@ -23,8 +22,6 @@ def list_items(
     stmt = select(ActionItem)
     if completed is not None:
         stmt = stmt.where(ActionItem.completed.is_(completed))
-    if project_id is not None:
-        stmt = stmt.where(ActionItem.project_id == project_id)
 
     sort_field = sort.lstrip("-")
     order_fn = desc if sort.startswith("-") else asc
@@ -39,7 +36,7 @@ def list_items(
 
 @router.post("/", response_model=ActionItemRead, status_code=201)
 def create_item(payload: ActionItemCreate, db: Session = Depends(get_db)) -> ActionItemRead:
-    item = ActionItem(description=payload.description, completed=False, project_id=payload.project_id)
+    item = ActionItem(description=payload.description, completed=False)
     db.add(item)
     db.flush()
     db.refresh(item)
@@ -67,27 +64,9 @@ def patch_item(item_id: int, payload: ActionItemPatch, db: Session = Depends(get
         item.description = payload.description
     if payload.completed is not None:
         item.completed = payload.completed
-    if payload.project_id is not None:
-        item.project_id = payload.project_id
     db.add(item)
     db.flush()
     db.refresh(item)
     return ActionItemRead.model_validate(item)
-
-
-@router.get("/{item_id}", response_model=ActionItemRead)
-def get_item(item_id: int, db: Session = Depends(get_db)) -> ActionItemRead:
-    item = db.get(ActionItem, item_id)
-    if not item:
-        raise HTTPException(status_code=404, detail="Action item not found")
-    return ActionItemRead.model_validate(item)
-
-
-@router.delete("/{item_id}", status_code=204)
-def delete_item(item_id: int, db: Session = Depends(get_db)) -> None:
-    item = db.get(ActionItem, item_id)
-    if not item:
-        raise HTTPException(status_code=404, detail="Action item not found")
-    db.delete(item)
 
 

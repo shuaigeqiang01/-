@@ -36,9 +36,7 @@ def client() -> Generator[TestClient, None, None]:
     with TestClient(app) as c:
         yield c
 
-    try:
-        os.unlink(db_path)
-    except PermissionError:
-        pass
+    engine.dispose()
+    os.unlink(db_path)
 
 

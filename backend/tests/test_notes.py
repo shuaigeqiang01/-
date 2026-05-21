@@ -51,3 +51,18 @@ def test_get_nonexistent_note(client):
     assert r.status_code == 404
 
 
+def test_note_title_max_length(client):
+    r = client.post("/notes/", json={"title": "x" * 201, "content": "ok"})
+    assert r.status_code == 422
+
+
+def test_extract_endpoint(client):
+    r = client.post("/notes/extract", json={"text": "TODO: fix bug\nNothing here\nShip it!"})
+    assert r.status_code == 200, r.text
+    items = r.json()
+    assert len(items) == 2
+    categories = {i["category"] for i in items}
+    assert categories == {"todo", "urgent"}
+
+    r = client.post("/notes/extract", json={"text": ""})
+    assert r.status_code == 422
